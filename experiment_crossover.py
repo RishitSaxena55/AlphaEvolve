@@ -1,6 +1,7 @@
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
+
 load_dotenv()
 import random
 import matplotlib.pyplot as plt
@@ -118,6 +119,25 @@ def plot_history(history):
     print("Plot saved to results/performance_history.png")
 
 
+def save_best_code(score, code, filename="best_algorithm.py"):
+    """Saves the best performing code to a file in the results dir."""
+    os.makedirs('results', exist_ok=True)
+
+    filepath = os.path.join('results', filename)
+
+    print(f"\n Saving best algorithm to {filepath}...")
+
+    # Create a header with the performance score
+    header = f"# --- Best Algorithm Found ---\n"
+    header += f"# Performance Score: {score:.6f} (Lower is Better) \n\n"
+
+    with open(filepath, 'w') as f:
+        f.write(header)
+        f.write(code)
+
+    print("Code saved successfully.")
+
+
 history = []
 
 # --- Start of the main loop ---
@@ -197,6 +217,9 @@ if population:
     # Plot history
     if history:
         plot_history(history)
+
+    # Save best code
+    save_best_code(best_overall_score, best_overall_code)
 
 else:
     print("No successful algorithms were found")
