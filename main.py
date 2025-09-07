@@ -1,6 +1,13 @@
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
+import random
+import matplotlib.pyplot as plt
+
+# Import the judge
+from evaluation.harness import evaluate_function
+
+NUM_GENERATIONS = 15
 
 bubble_sort_code = """
 def sort_function(arr):
@@ -15,8 +22,18 @@ def sort_function(arr):
                 arr[j], arr[j+1] = arr[j+1], arr[j]
     return arr
 """
+POPULATION_SIZE = 10
 
-population = [bubble_sort_code]
+# Initialize the population with a score
+# First, we need to evaluate our initial Bubble Sort code
+print("Evaluating initial population...")
+temp_namespace = {}
+exec(bubble_sort_code, temp_namespace)
+initial_function = temp_namespace['sort_function']
+is_correct, performance = evaluate_function(initial_function)
+
+# The population stores, tuples of (scores, code)
+population = [(performance, bubble_sort_code)]
 
 
 def create_prompt(code_string):
@@ -30,6 +47,7 @@ def create_prompt(code_string):
     Here is the function to improve:
     ```python
     {code_string}
+    ```
     """
     return prompt
 
@@ -52,41 +70,96 @@ def get_llm_suggestion(prompt):
 
     return cleaned_code
 
+def plot_history(history):
+    """
+    Takes a list of performance scores and plots them.
+    """
+    # Create the results directory if it doesn't exist
+    os.makedirs('results', exist_ok=True)
 
-# Import the judge
-from evaluation.harness import evaluate_function
+    print("\n Generating performance plot...")
 
-# 1. Select the parent
-parent_code = population[0]
+    plt.figure(figsize=(10, 6)) # Set the figure size
+    plt.plot(history, marker='o', linestyle='-')
 
-# 2. Create the prompt
-prompt = create_prompt(parent_code)
+    plt.title('Performance Improvement Over Generations')
+    plt.xlabel('Generation')
+    plt.ylabel('Best Performance Score (Lower is Better)')
+    plt.grid(True)
 
-# 3. Get the new "child" code form the LLM
-print("Asking the LLM for a new function...")
-child_code_string = get_llm_suggestion(prompt)
-print("Got a response!")
-print("\n--- LLM Suggestion ---")
-print(child_code_string)
-print("----------------------\n")
-
-# 4. Create a runnable function from the child code string
-child_function = None
-try:
-    # We create a temporary dictionary to hold the function
-    # and then extract it
-    temp_namespace = {}
-    exec(child_code_string, temp_namespace)
-    child_function = temp_namespace['sort_function']
-except Exception as e:
-    print(f"Failed to create a function from the LLM's response. Error: {e}")
-
-# 5. Evaluate the new function
-if child_function:
-    print("Evaluating the new function...")
-    is_correct, performance = evaluate_function(child_function)
-    print(f"--- Result ---")
-    print(f"Correctness: {is_correct}")
-    print(f"Performance (total_time): {performance:.6f} seconds")
+    # Save the plot to a file
+    plt.savefig('results/performance_history.png')
+    print("Plot saved to results/performance_history.png")
 
 
+history = []
+
+
+# --- Start of the main loop ---
+for i in range(1, NUM_GENERATIONS + 1):
+    print(f"\n --- Generation {i}/{NUM_GENERATIONS} ---")
+
+    # 1. Select a random parent from the current population
+    parent_score, parent_code = random.choice(population)
+    print(f"Selected parent with score: {parent_score:.6f}")
+
+    # 2. Create the prompt
+    prompt = create_prompt(parent_code)
+
+    # 3. Get the new "child" code form the LLM
+    print("Asking the LLM for a new function...")
+    child_code_string = get_llm_suggestion(prompt)
+    print("Got a response!")
+    print("\n--- LLM Suggestion ---")
+    print(child_code_string)
+    print("----------------------\n")
+
+    # 4. Create a runnable function from the child code string
+    child_function = None
+    try:
+        # We create a temporary dictionary to hold the function
+        # and then extract it
+        temp_namespace = {}
+        exec(child_code_string, temp_namespace)
+        child_function = temp_namespace['sort_function']
+    except Exception as e:
+        print(f"Failed to create a function from the LLM's response. Error: {e}")
+
+    # 5. Evaluate the new function
+    if child_function:
+        print("Evaluating the new function...")
+        is_correct, performance = evaluate_function(child_function)
+        print(f"--- Result ---")
+        print(f"Correctness: {is_correct}")
+        print(f"Performance (total_time): {performance:.6f} seconds")
+
+        # Add the child to the population if it's good
+        if is_correct:
+            # Add the new child to the population
+            population.append((performance, child_code_string))
+
+            # Sort the population by score (lower is better)
+            population.sort(key=lambda x: x[0])
+
+            # Trim the population to maintain its size
+            population = population[:POPULATION_SIZE]
+
+    # Log the best score and print the current best score in the population
+    if population:
+        best_score = population[0][0]
+        history.append(best_score)
+        print(f"Current Best Score: {population[0][0]:.6f}")
+
+print("\n\n--- Experiment Finished ---")
+if population:
+    best_overall_score, best_overall_code = population[0]
+    print(f"Best overall score: {best_overall_score:.6f}")
+    print("--- Best algorithm found ---")
+    print(best_overall_code)
+
+    # Plot history
+    if history:
+        plot_history(history)
+
+else:
+    print("No successful algorithms were found")
