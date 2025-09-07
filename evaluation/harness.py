@@ -20,7 +20,7 @@ def check_correctness(sort_function_to_test):
 
 
 def measure_performance(sort_function_to_test):
-    """Measure the execution speed of a sorting function."""
+    """Measures the execution speed of a sorting function."""
     # Generate 1000 random lists of 5 numbers
     performance_tests = [random.sample(range(100), 5) for _ in range(1000)]
 
