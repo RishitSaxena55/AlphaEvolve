@@ -1,13 +1,15 @@
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
+load_dotenv()
 import random
 import matplotlib.pyplot as plt
+import time
 
 # Import the judge
 from evaluation.harness import evaluate_function
 
-NUM_GENERATIONS = 15
+NUM_GENERATIONS = 10
 
 bubble_sort_code = """
 def sort_function(arr):
@@ -36,34 +38,55 @@ is_correct, performance = evaluate_function(initial_function)
 population = [(performance, bubble_sort_code)]
 
 
-def create_prompt(code_string):
-    """Takes a string of Python code and wraps it in a prompt for the LLM."""
-    prompt = f"""You are an expert Python programmer. Your task is to take a given Python function and propose a functionally equivalent but different version.
+def create_prompt(code1, code2=None):
+    """Creates a prompt for mutation (1 code) or crossover (2 codes)."""
+    if code2 is None:
+        # Mutation Prompt if there's only 1 parent
+        return f"""You are an expert Python programmer. Your task is to take a given Python function and propose a functionally equivalent but different version.
 
-    Your goal is to improve the function's efficiency or to use a different algorithmic approach.
-    
-    **CRITICAL CONSTRAINT**: You must write the sorting logic from scratch using only basic control flow (for/while loops, if/else) and variable assignments. You are **NOT ALLOWED** to use any built-in or imported sorting functions, such as `sorted()` or `.sort()`.
-    
-    **CRITICAL**: You must provide *only* the complete, new Python function in your response. Do not include any explanations, introductory text, or markdown formatting like ```python.
+            Your goal is to improve the function's efficiency or to use a different algorithmic approach.
 
-    Here is the function to improve:
-    ```python
-    {code_string}
-    ```
-    """
-    return prompt
+            **CRITICAL CONSTRAINT**: You must write the sorting logic from scratch using only basic control flow (for/while loops, if/else) and variable assignments. You are **NOT ALLOWED** to use any built-in or imported sorting functions, such as `sorted()` or `.sort()`.
+
+            **CRITICAL**: You must provide *only* the complete, new Python function in your response. Do not include any explanations, introductory text, or markdown formatting like ```python.
+
+            Here is the function to improve:
+            ```python
+            {code1}
+            ```
+            """
+
+    # The new Crossover Prompt
+    return f"""You are an expert Python programmer specializing in algorithm optimization. Your task is to analyze two different Python functions that solve the same problem and create a new, hybrid function that combines the best ideas from both.
+
+        Your goal is to create a new function that is more efficient or uses a more clever algorithmic approach than either of the two examples.
+        
+        **CRITICAL CONSTRAINT**: You must write the sorting logic from scratch using only basic control flow (for/while loops, if/else) and variable assignments. You are **NOT ALLOWED** to use any built-in or imported sorting functions, such as `sorted()` or `.sort()`.
+        
+        **CRITICAL**: You must provide *only* the complete, new Python function in your response. Do not include any explanations or markdown formatting.
+
+        Here is the first function (Function A):
+        ```python
+        {code1}
+        ```
+
+        Here is the second function (Function B):
+        ```python
+        {code2}
+        ```
+        """
 
 
 def get_llm_suggestion(prompt):
     """Sends a prompt to the Gemini API and returns the code suggestion."""
-    load_dotenv()
+
     api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
         raise ValueError("GEMINI_API_KEY not found. Please check your .env file")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
     response = model.generate_content(prompt)
 
@@ -71,6 +94,7 @@ def get_llm_suggestion(prompt):
     cleaned_code = response.text.strip().replace("```python", "").replace("```", "").strip()
 
     return cleaned_code
+
 
 def plot_history(history):
     """
@@ -81,7 +105,7 @@ def plot_history(history):
 
     print("\n Generating performance plot...")
 
-    plt.figure(figsize=(10, 6)) # Set the figure size
+    plt.figure(figsize=(10, 6))  # Set the figure size
     plt.plot(history, marker='o', linestyle='-')
 
     plt.title('Performance Improvement Over Generations')
@@ -96,17 +120,24 @@ def plot_history(history):
 
 history = []
 
-
 # --- Start of the main loop ---
 for i in range(1, NUM_GENERATIONS + 1):
     print(f"\n --- Generation {i}/{NUM_GENERATIONS} ---")
 
-    # 1. Select a random parent from the current population
-    parent_score, parent_code = random.choice(population)
-    print(f"Selected parent with score: {parent_score:.6f}")
+    if len(population) > 1:
+        # Get two unique parents at once
+        parent1, parent2 = random.sample(population, 2)
+        parent1_score, parent1_code = parent1
+        parent2_score, parent2_code = parent2
+        print(f"Selected parent 1 (score: {parent1_score:.6f}) and parent 2 (score: {parent2_score:.6f}")
+    else:
+        # Fallback for first few generations if population is small
+        parent1_score, parent1_code = population[0]
+        parent2_code = None  # No second parent available yet
+        print(f"Selected single parent with score: {parent1_score:.6f}")
 
     # 2. Create the prompt
-    prompt = create_prompt(parent_code)
+    prompt = create_prompt(parent1_code, parent2_code)
 
     # 3. Get the new "child" code form the LLM
     print("Asking the LLM for a new function...")
@@ -115,6 +146,10 @@ for i in range(1, NUM_GENERATIONS + 1):
     print("\n--- LLM Suggestion ---")
     print(child_code_string)
     print("----------------------\n")
+
+    # Rate limit
+    print("Pausing for 5 seconds...")
+    time.sleep(5)
 
     # 4. Create a runnable function from the child code string
     child_function = None
