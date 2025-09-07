@@ -9,7 +9,7 @@ import time
 # Import the judge
 from evaluation.harness import evaluate_function
 
-NUM_GENERATIONS = 10
+NUM_GENERATIONS = 15
 
 bubble_sort_code = """
 def sort_function(arr):
