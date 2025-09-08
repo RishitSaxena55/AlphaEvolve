@@ -1,14 +1,16 @@
 # **Project AlphaEvolve: An LLM-driven Agent for Algorithmic Discovery 🧬**
 
+### [**🚀 View the Live Web App Demo\!**](https://www.google.com/url?sa=E&source=gmail&q=https://rishitsaxena55.github.io/AlphaEvolve/ai_code_evolver_app.html)
+
 This project is a hands-on exploration into the world of AI-driven scientific discovery, inspired by landmark papers like Google DeepMind's AlphaEvolve. It features a custom-built evolutionary agent that leverages the power of Large Language Models (LLMs) to discover, optimize, and invent computer algorithms from scratch.
 
 The core question: **Can an AI agent, powered by Google's Gemini, evolve and discover novel, efficient algorithms for classic computer science problems?**
 
-The answer, as demonstrated through a series of controlled experiments, is a resounding yes.
+The answer, as demonstrated through a series of controlled experiments, is a resounding yes—with some fascinating limitations.
 
 ## **🚀 The Core Engine: How It Works**
-![Official AlphaEvolve System Architecture](assets/alphaevolve_architecture.png)
-The system is built on a classic evolutionary loop, but with a modern twist: the "mutation" and "crossover" events are powered by an LLM, allowing for intelligent, semantic changes to the code rather than random ones. This project is a practical implementation of the official AlphaEvolve architecture shown below.
+
+The system is built on a classic evolutionary loop, but with a modern twist: the "mutation" and "crossover" events are powered by an LLM, allowing for intelligent, semantic changes to the code rather than random ones. This project is a practical implementation of the official AlphaEvolve architecture.
 
 The core workflow consists of these steps:
 
@@ -21,44 +23,39 @@ The core workflow consists of these steps:
 
 ## **📊 Summary of Results**
 
-This table summarizes the key findings from each experiment, showing the progression from a simple baseline to the discovery of sophisticated, from-scratch algorithms.
+This table summarizes the key findings from each experiment, showing the progression from simple problems to more complex challenges.
 
 | Experiment | Strategy | Algorithm Discovered | Final Performance Score\* | View Code | View Plot |
 | :---- | :---- | :---- | :---- | :---- | :---- |
 | **Baseline** | Unconstrained | Built-in sorted() | \~0.000225 | N/A | N/A |
-| **Constraint** | Mutation | Selection Sort | \~0.001313 | [Code](https://www.google.com/search?q=results/best_constrained_algorithm.py) | [Plot](https://www.google.com/search?q=results/constrained_history.png) |
-| **Crossover** | Crossover | **Hybrid Cocktail Sort** | **\~0.000762** | [Code](https://www.google.com/search?q=results/best_crossover_algorithm.py) | [Plot](https://www.google.com/search?q=results/crossover_history.png) |
-| **New Domain** | Crossover | Two-Pointer Swap | \~0.000510 | [Code](https://www.google.com/search?q=results/best_reversal_algorithm.py) | [Plot](https://www.google.com/search?q=results/reversal_history.png) |
+| **Constraint** | Mutation | Selection Sort | \~0.001313 | [Code](https://www.google.com/search?q=./results/selection_sort_suggestion.png) | N/A |
+| **Crossover** | Crossover | **Hybrid Cocktail Sort** | **\~0.000762** | [Code](https://www.google.com/search?q=./results/hybrid_sorting_crossover_selection_sort_cocktail_shaker_sort_suggestion.png) | N/A |
+| **New Domain** | Crossover | Two-Pointer Swap | \~0.000510 | [Code](https://www.google.com/search?q=./results_reversal/best_algorithm.py) | [Plot](https://www.google.com/search?q=./results_reversal/performance_history.png) |
+| **Pathfinding** | Adv. Strategies | Stuck in Local Minimum | \~11.0 (Non-optimal path) | [Code](https://www.google.com/search?q=./results_path_finding/best_algorithm.py) | [Plot](https://www.google.com/search?q=./results_path_finding/performance_history.png) |
 
-*\*Lower score is better. Scores represent total execution time on a standardized test harness. You will need to rename your saved plot files to match the links above (e.g., constrained\_history.png).*
+*\*Lower score is better. Scores for sorting/reversal are time; score for pathfinding is path cost.*
 
-## **🔬 The Research Journey: A Tale of Four Experiments**
+## **🔬 The Research Journey: A Tale of Five Experiments**
 
 The project evolved through a series of carefully designed experiments, each building on the last.
 
-### **Experiment 1: The Unconstrained Baseline (Sorting)**
+### **Experiment 1 & 2: Sorting (Baseline & Constraint)**
 
-* **Research Question:** What is the most optimal algorithm the AI can find for sorting a list if given no constraints?  
-* **Result:** The AI quickly discovered the most efficient solution possible in Python: return sorted(arr).  
-* **Finding:** This proved the system's core ability to optimize by finding the globally optimal solution for the given environment.
-
-### **Experiment 2: The Constraint Experiment**
-
-* **Research Question:** What happens if we forbid the AI from using shortcuts and force it to build an algorithm from first principles?  
-* **Result:** The system discovered a classic, fundamental sorting algorithm: **Selection Sort**.  
-* **Finding:** This proved the AI's ability to reason about algorithms from scratch when properly constrained.
+* **Finding:** The AI could find the optimal built-in sorted() function when unconstrained, and discovered a classic **Selection Sort** from scratch when constrained. This proved the core concept.
 
 ### **Experiment 3: The Crossover Strategy**
 
-* **Research Question:** Can a more advanced "crossover" strategy (combining ideas from two parents) discover a better algorithm than simple "mutation"?  
-* **Result:** The AI discovered a sophisticated, creative hybrid algorithm that sorts from both ends at once.  
-* **Finding:** Yes. The crossover strategy consistently led to the discovery of more complex and efficient algorithms like **Cocktail Shaker Sort** and **Bidirectional Selection Sort**.
+* **Finding:** Using a "crossover" strategy to combine ideas from two parents was more effective, leading to the discovery of sophisticated algorithms like **Cocktail Shaker Sort**.
 
 ### **Experiment 4: Generalizing to a New Domain (String Reversal)**
 
-* **Research Question:** Is this engine just a sorter, or can it solve other types of problems?  
-* **Result:** After adapting the test harness and prompts, the engine discovered the canonical, efficient solution: the **Two-Pointer Swap** algorithm.  
-* **Finding:** The engine is **general-purpose**. It successfully generalized its discovery capability to a completely different problem domain.
+* **Finding:** The engine proved to be general-purpose by successfully adapting to a new problem and discovering the efficient **Two-Pointer Swap** algorithm for string reversal.
+
+### **Experiment 5: The Pathfinding Challenge**
+
+* **Research Question:** Can the engine make the significant creative leap required to discover a complex algorithm like Dijkstra's from a simple starting point?  
+* **Result:** The system consistently found a valid path using a simple Depth-First Search (DFS), but failed to evolve it into a solution that correctly used weights to find the shortest path. Advanced strategies like "Chain-of-Thought" and "Hall of Fame" were implemented to encourage creativity.  
+* **Finding:** This experiment successfully identified the limits of the current evolutionary strategies. The conceptual gap between a simple DFS and a multi-component algorithm like Dijkstra's was too large for the AI to cross in a single evolutionary step. This is a classic example of getting stuck in a **"local minimum"** and is a critical finding for future work.
 
 ## **🛠️ Tech Stack**
 
@@ -70,40 +67,36 @@ The project evolved through a series of carefully designed experiments, each bui
 ## **⚙️ Running the Experiments**
 
 1. **Clone the Repository:**  
-   git clone \[https://github.com/YOUR\_USERNAME/project-alphaevolve.git\](https://github.com/YOUR\_USERNAME/project-alphaevolve.git)  
-   cd project-alphaevolve
+   ```
+   git clone \[https://github.com/RishitSaxena55/AlphaEvolve.git\](https://github.com/RishitSaxena55/AlphaEvolve.git)  
+   cd AlphaEvolve
+   ```
 
 2. **Set Up the Environment:**  
+   ```
    python3 \-m venv venv  
    source venv/bin/activate  \# On Windows: .\\venv\\Scripts\\activate
-
+   ```
+   
 3. **Install Dependencies:**  
-   pip install \-r requirements.txt
-
-4. **Configure Your API Key:**  
-   * Create a .env file in the root directory.  
-   * Add your Gemini API key to it: GEMINI\_API\_KEY="YOUR\_API\_KEY\_HERE"  
-5. **Run an Experiment:**  
-   * Open and run any of the experiment files (e.g., experiment\_crossover.py).  
-   * Results will be saved in the results/ folder.
+   ```
+   pip install \-r requirements.txt  
+   ```
 
 ## **🌟 What I Learned (Key Takeaways)**
 
 * **LLMs as Creative Engines:** LLMs are incredibly powerful tools for intelligent "mutation" and "crossover" in evolutionary algorithms.  
 * **The Power of Constraints:** The most interesting discoveries happened when the AI was given clear constraints, forcing it to be genuinely creative.  
-* **Generalization is Key:** The success of the string reversal experiment demonstrates that this architecture is a general-purpose framework for code optimization.
+* **Identifying Creative Limits:** The pathfinding experiment was crucial in demonstrating that for complex, multi-component algorithms, simple evolution is not enough. The AI needs a better strategy to make large conceptual leaps.
 
 ## **🤝 Future Work & Collaboration Opportunities**
 
-This project is a starting point, and there are many exciting avenues for future research and collaboration. I am actively looking for opportunities to expand this work and would welcome any discussion or partnership.
+This project is a starting point, and the findings from the pathfinding experiment have paved the way for exciting future research. I am actively looking for opportunities to expand this work.
 
-* **Tackling New Domains:** The framework is ready to be tested against more complex problems. I am particularly interested in exploring:  
-  * **Pathfinding Algorithms:** Can the engine evolve an algorithm like Dijkstra's from a simple brute-force search?  
-  * **Data Structures:** Could the system design an efficient implementation of a simple data structure, like a stack or queue?  
-  * **Simple Data Compression:** Can the AI discover a basic run-length encoding algorithm?  
-* **Enhancing the Engine:** There is significant room to improve the core evolutionary engine:  
-  * **Advanced Prompt Engineering:** Developing more sophisticated prompts for mutation and crossover.  
-  * **Meta-Evolution:** Creating a system where the AI evolves its own prompts to become a better programmer over time.  
-  * **Local Model Integration:** Adapting the engine to use open models like Gemma running locally.
+* **Overcoming Creative Gaps:** The key challenge is to help the AI bridge large conceptual gaps. I am interested in exploring:  
+  * **Algorithmic Scaffolding:** Providing the AI with a structural "skeleton" of a complex algorithm (like Dijkstra's) and tasking it with filling in the logical gaps.  
+  * **Multi-Stage Evolution:** Evolving individual components (like a priority queue) first, and then evolving a final algorithm that uses these pre-evolved components.  
+* **Tackling New Domains:** The framework is ready to be tested against other complex problems like simple data compression or optimizing data structures.  
+* **Enhancing the Engine:** There is significant room to improve the core engine, including adapting it to use open, locally-run models like Gemma.
 
 I believe this research direction has immense potential. If you are a researcher, student, or engineer interested in this field, please feel free to open an issue on GitHub to discuss ideas or reach out to me directly.
