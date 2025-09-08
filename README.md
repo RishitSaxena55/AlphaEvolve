@@ -64,7 +64,7 @@ The project evolved through a series of carefully designed experiments, each bui
 ## **🛠️ Tech Stack**
 
 * **Language:** Python 3  
-* **Core AI:** Google Gemini 1.5 Flash API  
+* **Core AI:** Google Gemini 2.0 Flash Lite API  
 * **Data Analysis & Plotting:** Matplotlib  
 * **Environment:** venv, python-dotenv
 
