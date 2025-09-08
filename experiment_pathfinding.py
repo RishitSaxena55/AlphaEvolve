@@ -10,19 +10,19 @@ import time
 # Import the judge
 from evaluation.harness_pathfinding import evaluate_function
 
-NUM_GENERATIONS = 15
+NUM_GENERATIONS = 10
+HALL_OF_FAME_INJECTION_RATE = 0.2
 
 graph = {
-    'A': {'B': 1, 'C': 4},
-    'B': {'A': 1, 'C': 2, 'D': 5},
-    'C': {'A': 4, 'B': 2, 'D': 1},
-    'D': {'B': 5, 'C': 1}
+    'A': {'B': 1, 'C': 10},
+    'B': {'A': 1, 'C': 1, 'D': 100},
+    'C': {'A': 10, 'B': 1, 'D': 1},
+    'D': {'B': 100, 'C': 1}
 }
+# Correct shortest path is A->B->C->D (cost 3)
 
 start_node = 'A'
 end_node = 'D'
-
-# The known shortest path is A -> B -> C -> D with a total cost of 1 + 2 + 1 = 4.
 
 initial_code = """
 def find_path_function(graph, start, end, path=None):
@@ -50,6 +50,8 @@ def find_path_function(graph, start, end, path=None):
 """
 
 POPULATION_SIZE = 10
+# Initialize Hall of Fame
+hall_of_fame = []
 
 # Initialize the population with a score
 print("Evaluating initial population...")
@@ -62,51 +64,85 @@ is_correct, performance = evaluate_function(initial_function, graph, start_node,
 
 if is_correct:
     population.append((performance, initial_code))
+    hall_of_fame.append((performance, initial_code))
 
 print(f"Initialized population with {len(population)} algorithms(s).")
 
 
-def create_prompt(code1, code2=None):
-    """Creates a prompt for the pathfinding problem."""
+# --- Chain-of-Thought Prompting Functions ---
 
-    # The main task description is defined once to ensure consistency.
-    task_description = """You are an expert programmer specializing in graph algorithms. Your task is to write a Python function `find_path_function(graph, start, end)` that finds the shortest path in a weighted graph.
+def create_planning_prompt(code1, code2=None):
+    """Creates a prompt that asks the AI to generate a PLAN to improve an algorithm."""
 
-The `graph` is a dictionary where keys are node names and values are dictionaries of neighbors and their weights (costs). The function must return a list of nodes representing the shortest path from `start` to `end`.
+    task_description = """You are an expert programmer specializing in graph algorithms. Your task is to provide a step-by-step plan to create or improve a function that finds the *shortest* path in a weighted graph.
 
-Your goal is to evolve the given algorithm(s) to be more efficient and to correctly consider the weights to find the optimal path. A good way to do this is often by keeping track of the shortest known distance to each node and a set of visited nodes.
-
-**CRITICAL CONSTRAINT**: You must write the pathfinding logic from scratch. You are **NOT ALLOWED** to use any imported libraries like `networkx`.
-
-**CRITICAL**: You must provide *only* the complete, new Python function in your response. Do not include any explanations."""
+Do NOT write any Python code. Only provide a numbered list of the logical steps required. For example:
+1. Initialize a data structure to store distances to all nodes, setting them to infinity.
+2. Set the starting node's distance to 0.
+3. Create a priority queue to track nodes to visit.
+4. Loop until the priority queue is empty..."""
 
     if code2 is None:
-        # Mutation Prompt: This is used when there is only one parent algorithm.
+        # Planning prompt for MUTATION (improving one function)
         return f"""{task_description}
 
-Here is the function to improve:
+Analyze the following function and create a plan to improve it so it correctly considers edge weights.
 ```python
 {code1}
 ```
 """
     else:
-        # Crossover Prompt: This is used when combining ideas from two parent algorithms.
+        # Planning prompt for CROSSOVER (combining two functions)
         return f"""{task_description}
 
-Here is the first function (Function A):
+Analyze the two following functions. Create a single, hybrid plan that combines the best ideas from both to create a superior algorithm.
+Function A:
 ```python
 {code1}
 ```
-
-Here is the second function (Function B):
+Function B:
 ```python
 {code2}
 ```
 """
 
 
-def get_llm_suggestion(prompt):
-    """Sends a prompt to the Gemini API and returns the code suggestion."""
+def create_coding_prompt(plan, code1, code2=None):
+    """Creates a prompt that asks the AI to write CODE based on a plan."""
+
+    if code2 is None:
+        context = f"""**The Original Function for reference:**
+```python
+{code1}
+```"""
+    else:
+        context = f"""**Function A for reference:**
+```python
+{code1}
+```
+**Function B for reference:**
+```python
+{code2}
+```"""
+
+    return f"""You are an expert Python programmer. Your task is to write a complete Python function that implements the following plan.
+
+**The Plan:**
+{plan}
+
+{context}
+
+**CRITICAL CONSTRAINT**: You must write the pathfinding logic from scratch. You are **NOT ALLOWED** to use any imported libraries like `networkx`.
+**CRITICAL**: You must provide *only* the complete, new Python function in your response, named `find_path_function`. Do not include any explanations.
+"""
+
+
+def get_llm_suggestion(parent1_code, parent2_code=None):
+    """Orchestrates the two-step "Plan and Code" process."""
+
+    # Get the plan from LLM
+    print("Asking the LLM for a plan...")
+    planning_prompt = create_planning_prompt(parent1_code, parent2_code)
 
     api_key = os.getenv("GEMINI_API_KEY")
 
@@ -116,10 +152,25 @@ def get_llm_suggestion(prompt):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
-    response = model.generate_content(prompt)
+    # Make the first API call to get the plan
+    plan_response = model.generate_content(planning_prompt)
+    plan_text = plan_response.text
+    print("Got a plan!")
+    print("\n--- The Plan ---")
+    print(plan_text)
+    print("----------------\n")
+
+    time.sleep(5)
+
+    # Get the code based on the Plan
+    print("Asking the LLM to write the code for the plan...")
+    coding_prompt = create_coding_prompt(plan_text, parent1_code, parent2_code)
+
+    # Make the second API call to get the final code
+    code_response = model.generate_content(coding_prompt)
 
     # Clean up the response to get only the code
-    cleaned_code = response.text.strip().replace("```python", "").replace("```", "").strip()
+    cleaned_code = code_response.text.strip().replace("```python", "").replace("```", "").strip()
 
     return cleaned_code
 
@@ -171,32 +222,39 @@ history = []
 for i in range(1, NUM_GENERATIONS + 1):
     print(f"\n --- Generation {i}/{NUM_GENERATIONS} ---")
 
-    if len(population) > 1:
-        # Get two unique parents at once
-        parent1, parent2 = random.sample(population, 2)
-        parent1_score, parent1_code = parent1
-        parent2_score, parent2_code = parent2
-        print(f"Selected parent 1 (score: {parent1_score:.6f}) and parent 2 (score: {parent2_score:.6f}")
+    # --- NEW: Hall of Fame Parent Selection Logic ---
+    parent1_code, parent2_code = None, None
+    if not population:
+        print("Population is empty. Halting experiment.")
+        break
+
+    # Decide whether to inject a parent from the Hall of Fame
+    if random.random() < HALL_OF_FAME_INJECTION_RATE and hall_of_fame:
+        print("Injecting a creative parent from the Hall of Fame...")
+        # Parent 1 is from the Hall of Fame
+        parent1_score, parent1_code = random.choice(hall_of_fame)
+
+        # Parent 2 is from the high-performing population (if available)
+        if len(population) > 1:
+            parent2_score, parent2_code = random.choice(population)
+            print(f"Selected parent 1 from HOF (cost: {parent1_score}) and parent 2 (cost: {parent2_score}).")
+        else:
+            print(f"Selected single parent (cost: {parent1_score}) from HOF for mutation.")
     else:
-        # Fallback for first few generations if population is small
-        parent1_score, parent1_code = population[0]
-        parent2_code = None  # No second parent available yet
-        print(f"Selected single parent with score: {parent1_score:.6f}")
-
-    # 2. Create the prompt
-    prompt = create_prompt(parent1_code, parent2_code)
-
-    # 3. Get the new "child" code form the LLM
-    print("Asking the LLM for a new function...")
-    child_code_string = get_llm_suggestion(prompt)
+        # Standard selection from the high-performing population
+        if len(population) > 1:
+            parent1, parent2 = random.sample(population, 2)
+            parent1_score, parent1_code = parent1
+            parent2_score, parent2_code = parent2
+            print(f"Selected parent 1 (cost: {parent1_score}) and parent 2 (cost: {parent2_score}) for crossover.")
+        else:
+            parent1_score, parent1_code = population[0]
+            print(f"Selected single parent (cost: {parent1_score}) for mutation.")
+    child_code_string = get_llm_suggestion(parent1_code, parent2_code)
     print("Got a response!")
     print("\n--- LLM Suggestion ---")
     print(child_code_string)
     print("----------------------\n")
-
-    # Rate limit
-    print("Pausing for 5 seconds...")
-    time.sleep(5)
 
     # 4. Create a runnable function from the child code string
     child_function = None
@@ -217,16 +275,24 @@ for i in range(1, NUM_GENERATIONS + 1):
         print(f"Correctness: {is_correct}")
         print(f"Performance (total_time): {performance:.6f} seconds")
 
-        # Add the child to the population if it's good
+        # ... (inside the 'if child_function:' block) ...
         if is_correct:
-            # Add the new child to the population
+            # This part is the same: update the main population
             population.append((performance, child_code_string))
-
-            # Sort the population by score (lower is better)
             population.sort(key=lambda x: x[0])
-
-            # Trim the population to maintain its size
             population = population[:POPULATION_SIZE]
+
+            # --- NEW: Hall of Fame Update Logic ---
+            is_unique = True
+            # Use line count as a simple way to check for structural difference
+            child_line_count = len(child_code_string.splitlines())
+            for _, fame_code in hall_of_fame:
+                if len(fame_code.splitlines()) == child_line_count:
+                    is_unique = False
+                    break
+            if is_unique:
+                hall_of_fame.append((performance, child_code_string))
+                print("A new unique algorithm was added to the Hall of Fame!")
 
     # Log the best score and print the current best score in the population
     if population:
@@ -250,3 +316,12 @@ if population:
 
 else:
     print("No successful algorithms were found")
+
+# Print Hall of Fame
+if hall_of_fame:
+    print("\n--- 🏛️ Hall of Fame (All Unique Algorithms Discovered) ---")
+    hall_of_fame.sort(key=lambda x: x[0]) # Sort by best score
+    for score, code in hall_of_fame:
+        print(f"\n--- Score: {score} ---")
+        print(code)
+
