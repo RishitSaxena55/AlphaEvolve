@@ -1,6 +1,10 @@
 # **Project AlphaEvolve: An LLM-driven Agent for Algorithmic Discovery 🧬**
 
-### [**🚀 View the Live Web App Demo\!**](https://www.google.com/url?sa=E&source=gmail&q=https://rishitsaxena55.github.io/AlphaEvolve/ai_code_evolver_app.html)
+<p align="center">
+  <a href="https://ai-evolver-webapp.vercel.app/">
+    <img src="https://img.shields.io/badge/Live%20Demo-Launch%20App-brightgreen?style=for-the-badge&logo=vercel" alt="Live Demo">
+  </a>
+</p>
 
 This project is a hands-on exploration into the world of AI-driven scientific discovery, inspired by landmark papers like Google DeepMind's AlphaEvolve. It features a custom-built evolutionary agent that leverages the power of Large Language Models (LLMs) to discover, optimize, and invent computer algorithms from scratch.
 
