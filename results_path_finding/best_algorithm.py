@@ -2,25 +2,27 @@
 # Performance Score: 3.000000 (Lower is Better) 
 
 
-def find_path_function(graph, start, end, path=None):
-    # A corrected recursive DFS pathfinder.
-    # It finds a path, but ignores weights, so it is not optimal.
-    if path is None:
-        path = []
+import collections
 
-    path = path + [start]
 
+def find_path_function(graph, start, end):
     if start == end:
-        return path
+        return [start]
 
-    if start not in graph:
-        return None
+    queue = collections.deque([(start, [start])])
+    visited = {start}
 
-    # This just finds the first valid path, not the shortest.
-    for node in graph[start]:
-        if node not in path:
-            newpath = find_path_function(graph, node, end, path)
-            if newpath:
-                return newpath
+    while queue:
+        current_node, current_path = queue.popleft()
+
+        if current_node not in graph:
+            continue
+
+        for neighbor in graph[current_node]:
+            if neighbor == end:
+                return current_path + [neighbor]
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, current_path + [neighbor]))
 
     return None
