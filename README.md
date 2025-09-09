@@ -33,8 +33,8 @@ This table summarizes the key findings from each experiment, showing the progres
 | :---- | :---- | :---- | :---- | :---- | :---- |
 | **Baseline** | Unconstrained | Built-in sorted() | \~0.000225 | N/A | N/A |
 | **Constraint** | Mutation | Selection Sort | \~0.001313 | [Code](https://www.google.com/search?q=./results/selection_sort_suggestion.png) | N/A |
-| **Crossover** | Crossover | **Hybrid Cocktail Sort** | **\~0.000762** | [Code](https://www.google.com/search?q=./results/hybrid_sorting_crossover_selection_sort_cocktail_shaker_sort_suggestion.png) | N/A |
-| **New Domain** | Crossover | Two-Pointer Swap | \~0.000510 | [Code](https://www.google.com/search?q=./results_reversal/best_algorithm.py) | [Plot](https://www.google.com/search?q=./results_reversal/performance_history.png) |
+| **Crossover** | Crossover | **Hybrid Cocktail Sort** | **\~0.000762** | [Code](results/hybrid_sorting_crossover_selection_sort_cocktail_shaker.py) | N/A |
+| **New Domain** | Crossover | Two-Pointer Swap | \~0.000510 | [Code](results_reversal/crossover_two_pointer_swap_reversal.py) | [Plot](results_reversal/crossover_two_pointer_swap_reversal.png) |
 | **Pathfinding** | Adv. Strategies | Stuck in Local Minimum | \~11.0 (Non-optimal path) | [Code](https://www.google.com/search?q=./results_path_finding/best_algorithm.py) | [Plot](https://www.google.com/search?q=./results_path_finding/performance_history.png) |
 
 *\*Lower score is better. Scores for sorting/reversal are time; score for pathfinding is path cost.*
